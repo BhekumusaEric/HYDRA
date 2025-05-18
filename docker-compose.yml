@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  hydra-orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python main.py
+    networks:
+      - hydra-network
+
+networks:
+  hydra-network:
+    driver: bridge

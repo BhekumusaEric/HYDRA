@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HYDRA Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding-top: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .card-header {
+            font-weight: bold;
+            background-color: #343a40;
+            color: white;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+        .log-timestamp {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        .log-message {
+            margin-left: 10px;
+        }
+        .log-INFO {
+            color: #0d6efd;
+        }
+        .log-WARNING {
+            color: #ffc107;
+        }
+        .log-ERROR {
+            color: #dc3545;
+        }
+        .log-SUCCESS {
+            color: #198754;
+        }
+        .network-graph {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+        }
+        .training-chart {
+            width: 100%;
+            height: auto;
+            max-height: 400px;
+        }
+        .action-entry {
+            padding: 8px;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+        .action-attack {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 3px solid #dc3545;
+        }
+        .action-defense {
+            background-color: rgba(25, 135, 84, 0.1);
+            border-left: 3px solid #198754;
+        }
+        .hydra-logo {
+            max-width: 100px;
+            margin-right: 15px;
+        }
+        .header-title {
+            display: flex;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-title mb-4">
+            <h1>🐉 Project HYDRA Dashboard</h1>
+        </div>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">Network Topology</div>
+                    <div class="card-body text-center">
+                        <img id="network-graph" class="network-graph" src="" alt="Network Graph">
+                        <div class="mt-2">
+                            <button id="refresh-network" class="btn btn-sm btn-primary">Refresh Network</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Training Progress</div>
+                    <div class="card-body text-center">
+                        <img id="training-chart" class="training-chart" src="" alt="Training Chart">
+                        <div class="mt-2">
+                            <button id="refresh-training" class="btn btn-sm btn-primary">Refresh Chart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">System Logs</div>
+                    <div class="card-body">
+                        <div id="logs-container" style="height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">Recent Actions</div>
+                    <div class="card-body">
+                        <div id="actions-container" style="height: 300px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">System Status</div>
+                    <div class="card-body">
+                        <table class="table table-sm">
+                            <tbody>
+                                <tr>
+                                    <td>Red Agent Status:</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Blue Agent Status:</td>
+                                    <td><span class="badge bg-success">Active</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Digital Twin:</td>
+                                    <td><span class="badge bg-success">Running</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Current Episode:</td>
+                                    <td id="current-episode">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Compromised Nodes:</td>
+                                    <td id="compromised-nodes">0</td>
+                                </tr>
+                                <tr>
+                                    <td>Patched Nodes:</td>
+                                    <td id="patched-nodes">0</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Function to fetch and update logs
+        function updateLogs() {
+            fetch('/logs')
+                .then(response => response.json())
+                .then(data => {
+                    const logsContainer = document.getElementById('logs-container');
+                    logsContainer.innerHTML = '';
+                    
+                    data.forEach(log => {
+                        const logEntry = document.createElement('div');
+                        logEntry.className = 'log-entry';
+                        
+                        const timestamp = document.createElement('span');
+                        timestamp.className = 'log-timestamp';
+                        timestamp.textContent = new Date(log.timestamp).toLocaleTimeString();
+                        
+                        const message = document.createElement('span');
+                        message.className = `log-message log-${log.level}`;
+                        message.textContent = log.message;
+                        
+                        logEntry.appendChild(timestamp);
+                        logEntry.appendChild(message);
+                        logsContainer.appendChild(logEntry);
+                    });
+                    
+                    // Auto-scroll to bottom
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                })
+                .catch(error => console.error('Error fetching logs:', error));
+        }
+        
+        // Function to fetch and update actions
+        function updateActions() {
+            fetch('/actions')
+                .then(response => response.json())
+                .then(data => {
+                    const actionsContainer = document.getElementById('actions-container');
+                    actionsContainer.innerHTML = '';
+                    
+                    data.forEach(action => {
+                        const actionEntry = document.createElement('div');
+                        actionEntry.className = `action-entry action-${action.type}`;
+                        
+                        const timestamp = document.createElement('div');
+                        timestamp.className = 'action-timestamp';
+                        timestamp.textContent = new Date(action.timestamp).toLocaleTimeString();
+                        
+                        const details = document.createElement('div');
+                        details.className = 'action-details';
+                        details.textContent = `${action.agent} agent: ${action.type} - ${JSON.stringify(action.details)}`;
+                        
+                        actionEntry.appendChild(timestamp);
+                        actionEntry.appendChild(details);
+                        actionsContainer.appendChild(actionEntry);
+                    });
+                    
+                    // Auto-scroll to bottom
+                    actionsContainer.scrollTop = actionsContainer.scrollHeight;
+                })
+                .catch(error => console.error('Error fetching actions:', error));
+        }
+        
+        // Function to update network graph
+        function updateNetworkGraph() {
+            fetch('/network_graph')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image) {
+                        document.getElementById('network-graph').src = data.image;
+                    }
+                })
+                .catch(error => console.error('Error fetching network graph:', error));
+        }
+        
+        // Function to update training chart
+        function updateTrainingChart() {
+            fetch('/training_chart')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.image) {
+                        document.getElementById('training-chart').src = data.image;
+                    }
+                })
+                .catch(error => console.error('Error fetching training chart:', error));
+        }
+        
+        // Function to update system status
+        function updateSystemStatus() {
+            fetch('/network')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.compromised_nodes !== undefined) {
+                        document.getElementById('compromised-nodes').textContent = data.compromised_nodes;
+                    }
+                    if (data.patched_nodes !== undefined) {
+                        document.getElementById('patched-nodes').textContent = data.patched_nodes;
+                    }
+                })
+                .catch(error => console.error('Error fetching network status:', error));
+            
+            fetch('/training')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.episodes && data.episodes.length > 0) {
+                        document.getElementById('current-episode').textContent = data.episodes[data.episodes.length - 1];
+                    }
+                })
+                .catch(error => console.error('Error fetching training status:', error));
+        }
+        
+        // Initial load
+        updateLogs();
+        updateActions();
+        updateNetworkGraph();
+        updateTrainingChart();
+        updateSystemStatus();
+        
+        // Set up refresh intervals
+        setInterval(updateLogs, 5000);
+        setInterval(updateActions, 5000);
+        setInterval(updateSystemStatus, 10000);
+        
+        // Set up refresh buttons
+        document.getElementById('refresh-network').addEventListener('click', updateNetworkGraph);
+        document.getElementById('refresh-training').addEventListener('click', updateTrainingChart);
+    </script>
+</body>
+</html>

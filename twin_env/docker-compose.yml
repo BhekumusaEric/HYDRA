@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  web-app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    networks:
+      - twin-network
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/hydra
+
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hydra
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - twin-network
+    ports:
+      - "5432:5432"
+
+networks:
+  twin-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
